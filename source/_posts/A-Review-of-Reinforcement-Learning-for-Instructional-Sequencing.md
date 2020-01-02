@@ -59,3 +59,60 @@ taken by an RL agent to optimize a student’s learning over the course of many 
 
 ## A Historical Perspective
 
+## Review of Empirical Studies
+
+### 论文\研究入选标准：
+
+- The study acknowledges (at least implicitly) that there is a model governing student learning and giving different instructional actions to a student might probabilistically change the state of a student according to the model.
+
+- There is an instructional policy that maps past observations from a student (e.g., responses to questions) to instructional actions.
+  
+- Data collected from students (e.g., correct or incorrect responses to previous questions), either in thepast (offline) or over the course of the study (online), are used to learn either:
+  
+  - a statistical model of student learning, and/or
+  - an instructional policy
+
+- If a statistical model of student learning is fit to data, the instructional policy is designed to approximately optimize that model according to some reward function, which may be implicitly specified.
+
+### 结果
+
+#### 在符合标准的34篇论文（包括41个研究）中：
+
+- 19篇使用离线数据，但没有在真实学生上进行评估
+- 至少有23篇，只使用了模拟数据
+- 只少8篇仅提议使用强化学习进行Instructional Sequencing (At least eight papers simply proposed using RL for instructional sequencing or proposed an algorithm for doing so in a particular setting without using simulated or real data.)
+
+#### 在其它相关研究中：
+
+- 至少有14篇在真实学生身上进行，但是研究不符合上述标准，如：
+  -  没有实验
+  -  使用人工设置的模型参数，而不是从数据中学习的参数
+  -  varying more than just the instructional policy across conditions
+
+
+#### RL策略与Baseline策略对比：
+
+
+|                                   | Sig | ATI | Mixed | Not Sig | Sig Worse |
+|-----------------------------------|-----|-----|-------|---------|-----------|
+| Paired\-Associate Learning Tasks  | 11  | 0   | 0     | 2       | 1         |
+| Paired\-Associate Learning Tasks  | 11  | 0   | 0     | 2       | 1         |
+| Concept Learning Tasks            | 4   | 0   | 2     | 1       | 0         |
+| Sequencing Interdependent Content | 0   | 0   | 2     | 6       | 0         |
+| Sequencing Activity Types         | 4   | 4   | 0     | 2       | 0         |
+| Not Optimizing Learning           | 2   | 0   | 0     | 0       | 0         |
+
+- Sig indicates that at least one RL-induced policy significantly outperformed all baseline policies
+- ATI indicates an aptitude-treatment interaction
+- Mixed indicates the RL-induced policy significantly outperformed some but not all baselines
+- Not sig indicates that there were no significant differences between policies, Sig worse indicates that the RL-induced policy was significantly worse than the baseline policy (which for the only such case was an adaptive policy).
+
+
+#### 5类研究：
+
+- Paired-Associate Learning Tasks
+- Concept Learning Tasks
+- **Sequencing Interdependent Content**
+- Sequencing Activity Types
+- Not Optimizing Learning：目标不是学生的能力增长和学习速度
+
