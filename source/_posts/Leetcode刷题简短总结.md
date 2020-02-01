@@ -2,7 +2,7 @@
 title: Leetcode刷题简短总结
 date: 2019-4-05 21:12:24
 categories:
-    - 环境搭建
+    - 算法和数据结构
 tags: 
     blog
     hexo
