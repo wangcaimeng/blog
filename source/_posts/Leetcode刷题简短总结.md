@@ -22,6 +22,12 @@ HashSet， 一次遍历 O(n)
 ### 3.无重复的最长子串 中等
 滑动窗口+HashSet
 
+### 4. 寻找两个有序数组的中位数
+- 设 $imin=0，mimax=m$, 然后开始在 $[imin,imax]$ 中进行搜索。
+
+- 令 $i = \frac{\text{imin} + \text{imax}}{2},j = \frac{m + n + 1}{2} - i$
+
+
 ### 5.最长回文串 中等
 暴力法O(n^3) 反转+最长公共子串 DP 中心扩展O(n^2)  Manacher 算法O(n)
 
@@ -37,11 +43,41 @@ HashSet， 一次遍历 O(n)
 ### 9.回文数 简单
 负数返回False 正数反转一般数字，用//10的方法
 
+### 10. 正则表达式匹配
+``` python
+def is_match(s,p):
+    if not s: return not p
+    if not p: return not s
+    first = p[0] == s[0] or p[0] == '.'
+    if len(p)>=2 and p[1] == '*':
+        return is_match(s, p[2:]) or first and is_match(s[1:], p)  #匹配0次或N次
+    else:
+        return first and is_match(s[1:], p[1:])
+```
+### 11. 盛最多水的容器
+双指针，哪边成为瓶颈就更新哪边
+
 ### 15.三数之和 中等
 转化为两数之和
 
+### 16. 最接近的三数之和
+排序，固定一个，然后双指针
+
+### 18. 四数之和
+排序，固定2个，然后双指针
+
+### 19. 删除链表的倒数第N个节点
+快慢指针找到倒数第N个节点的前一个节点，然后做删除操作
+
+
 ### 20.有效的括号 简单
 stack
+
+### 22. 括号生成
+backtrack 
+
+### 23. 合并K个排序链表
+k-1次2合并
 
 ### 26.删除排序数组中的重复项 简单
 要求原地算法，双指针，和partition类似

@@ -12,6 +12,9 @@ tags:
 # 1. 后端
 
 ## 1.1 目录结构
+
+
+```
 back_end_docker
 ├── lrrs-back-end //我项目的名字
 │   ├── app.py  //flask入口文件
@@ -19,6 +22,7 @@ back_end_docker
 │   └── uwsgi.ini   //uwsgi配置文件
 ├── Dockerfile   
 └── nginx.conf  //nginx配置文件
+```
 
 ## 1.2 Dockerfile
 
@@ -29,7 +33,7 @@ FROM ubuntu:18.04
 # 添加标签说明
 LABEL author="wangcaimeng" email="wangcaimeng@nlsde.buaa.edu.cn"  purpose="nginx+uwsgi+python3"
 
-# 配置镜像地址  使用阿里云镜像站
+# 配置apt镜像源地址  使用阿里云镜像站
 RUN  sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list
 RUN  apt-get clean
 RUN apt-get update
@@ -141,6 +145,8 @@ disable-logging = true
 # 2. 前端
 
 ## 2.1目录结构
+
+```
 front_end_docker
 ├── lrrs-front-end //我项目的名字
 │   ├── dist  //build好的项目
@@ -148,6 +154,7 @@ front_end_docker
 ├── Dockerfile   
 └── nginx
     └── default.conf
+```
 
 nginx.conf  //nginx配置文件
 
