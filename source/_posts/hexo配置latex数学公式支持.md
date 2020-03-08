@@ -11,6 +11,7 @@ mathjax: true
 - 使用hexo-math插件
 - 使用Next主题
   
+
 <!-- more -->
 
 # 1.使用hexo-math插件
@@ -66,9 +67,16 @@ mathjax: true
 ```
 
 ## 1.3 测试
+
+
+
 $$ a^{2}=b^{2}+c^{2} $$
 
-# 2 使用next主题
+
+
+
+
+# $2$ 使用next主题
 
 <https://github.com/theme-next/hexo-theme-next>
 参考<https://blog.csdn.net/qq_41518277/article/details/101766036>
@@ -86,6 +94,7 @@ $$ a^{2}=b^{2}+c^{2} $$
   ```
 - 使用katex
   卸载hexo-renderer-marked并更换为一下二选一
+  
   ```
   npm un hexo-renderer-marked --save 
   npm i hexo-renderer-markdown-it-plus --save ＃ or hexo-renderer-markdown-it
