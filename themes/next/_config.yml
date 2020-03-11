@@ -78,8 +78,8 @@ footer:
 
   # Beian ICP and gongan information for Chinese users. See: http://www.beian.miit.gov.cn, http://www.beian.gov.cn
   beian:
-    enable: false
-    icp:
+    enable: true
+    icp: 京ICP备19051369号
     # The digit in the num of gongan beian.
     gongan_id:
     # The full num of gongan beian.
@@ -584,8 +584,10 @@ comments:
     #disqus:
     #  text: Load Disqus
     #  order: -1
-    #gitalk:
-    #  order: -2
+    changyan:
+      order: -1
+    gitalk:
+      order: -2
 
 # Disqus
 disqus:
@@ -610,9 +612,9 @@ disqusjs:
 
 # Changyan
 changyan:
-  enable: false
-  appid:
-  appkey:
+  enable: true
+  appid: cyuJn3Php
+  appkey: prod_14d9b5abda38c8c610236bdf3223eaae
   #post_meta_order: 0
 
 # Valine
@@ -746,7 +748,7 @@ algolia_search:
 # Local Search
 # Dependencies: https://github.com/theme-next/hexo-generator-searchdb
 local_search:
-  enable: false
+  enable: true
   # If auto, trigger search by changing input.
   # If manual, trigger search by pressing enter key or search button.
   trigger: auto
@@ -1029,3 +1031,4 @@ vendors:
 css: css
 js: js
 images: images
+

@@ -17,6 +17,7 @@ mathjax: true
 ```python
 import numpy as np
 import pandas as pd
+from tqdm import tqdm_notebook
 ```
 
 
@@ -57,39 +58,39 @@ ratings_df.sample(5)
   </thead>
   <tbody>
     <tr>
-      <th>4711</th>
-      <td>28</td>
-      <td>60684</td>
-      <td>4.0</td>
-      <td>1240817508</td>
+      <th>45674</th>
+      <td>302</td>
+      <td>1221</td>
+      <td>5.0</td>
+      <td>854473396</td>
     </tr>
     <tr>
-      <th>87902</th>
-      <td>567</td>
-      <td>51077</td>
-      <td>1.0</td>
-      <td>1525289538</td>
-    </tr>
-    <tr>
-      <th>33213</th>
-      <td>226</td>
-      <td>1923</td>
-      <td>2.5</td>
-      <td>1095662842</td>
-    </tr>
-    <tr>
-      <th>43152</th>
-      <td>288</td>
-      <td>56339</td>
+      <th>15358</th>
+      <td>100</td>
+      <td>1213</td>
       <td>3.5</td>
-      <td>1216220492</td>
+      <td>1100183731</td>
     </tr>
     <tr>
-      <th>17939</th>
-      <td>112</td>
-      <td>508</td>
-      <td>4.5</td>
-      <td>1513989990</td>
+      <th>38978</th>
+      <td>268</td>
+      <td>1968</td>
+      <td>2.0</td>
+      <td>940183036</td>
+    </tr>
+    <tr>
+      <th>85484</th>
+      <td>555</td>
+      <td>1405</td>
+      <td>3.0</td>
+      <td>978747341</td>
+    </tr>
+    <tr>
+      <th>71398</th>
+      <td>458</td>
+      <td>552</td>
+      <td>4.0</td>
+      <td>845652992</td>
     </tr>
   </tbody>
 </table>
@@ -138,7 +139,7 @@ train_data = Dataset.load_from_df(train_df[['userId','movieId','rating']],reader
 ```python
 svd = SVD()
 #训练和预测
-svd.fit(train_data)
+svd.fit(train_data,)
 predictions = svd.test(test_df[['userId','movieId','rating']].values)
 #评估
 accuracy.rmse(predictions, verbose=True)
@@ -156,40 +157,56 @@ accuracy.rmse(predictions, verbose=True)
 
 # 3.使用keras实现矩阵分解
 
+使用深度学习框架的方法，对userid和movieid进行embedding后进行Dot得到rating。还可以讲连个embedded向量进行拼接使用2个LinearLayer进行预测rating
+
 
 ```python
 import tensorflow as tf
-from tensorflow.keras.layers import Input,Embedding,Reshape,Dot
+from tensorflow.keras.layers import Input,Embedding,Reshape,Dot,Dense,Concatenate
 from tensorflow.keras import Model
+import os
+# 使用第2张GPU
+os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 ```
 
 
 ```python
-#输入层
-user_id_input = Input(shape=[1],name='user_id')
-movie_id_input = Input(shape=[1],name='movied_id')
+def build_model(outlayer='dot'):
+    #输入层
+    user_id_input = Input(shape=[1],name='user_id')
+    movie_id_input = Input(shape=[1],name='movied_id')
 
-#embedding 层
-embedding_dim = 10
-user_embedded = Embedding(input_dim=n_users,output_dim=embedding_dim,input_length=1,name='user_embedded')(user_id_input)
-movie_embedded = Embedding(input_dim=n_movies,output_dim=embedding_dim,input_length=1,name='movie_embedded')(movie_id_input)
+    #embedding 层
+    embedding_dim = 10
+    user_embedded = Embedding(input_dim=n_users,output_dim=embedding_dim,input_length=1,name='user_embedded')(user_id_input)
+    movie_embedded = Embedding(input_dim=n_movies,output_dim=embedding_dim,input_length=1,name='movie_embedded')(movie_id_input)
 
-#Reshape embedding层输出是[batch,1,embedding_dim]
-moive_vec = Reshape([embedding_dim])(movie_embedded)
-user_vec = Reshape([embedding_dim])(user_embedded)
+    #Reshape embedding层输出是[batch,1,embedding_dim]
+    moive_vec = Reshape([embedding_dim])(movie_embedded)
+    user_vec = Reshape([embedding_dim])(user_embedded)
 
-#Dot计算rating
-y = Dot(axes=1)([moive_vec,user_vec])
+    
+    if outlayer == 'dot':
+        #矩阵分解 Dot计算rating
+        y = Dot(axes=1)([moive_vec,user_vec])
+    elif outlayer == 'fc':
+        #使用全连接层预测rating 效果更好
+        concat = Concatenate()([moive_vec,user_vec])
+        dense = Dense(256)(concat)
+        y = Dense(1)(dense)
 
-model = Model(inputs = [user_id_input,movie_id_input],outputs=y)
+    model = Model(inputs = [user_id_input,movie_id_input],outputs=y)
+    return model
 ```
 
 
 ```python
+model = build_model('fc')
 model.summary()
 ```
 
-    Model: "model"
+```
+    Model: "model_5"
     __________________________________________________________________________________________________
     Layer (type)                    Output Shape         Param #     Connected to                     
     ==================================================================================================
@@ -201,19 +218,23 @@ model.summary()
     __________________________________________________________________________________________________
     user_embedded (Embedding)       (None, 1, 10)        6100        user_id[0][0]                    
     __________________________________________________________________________________________________
-    reshape (Reshape)               (None, 10)           0           movie_embedded[0][0]             
+    reshape_10 (Reshape)            (None, 10)           0           movie_embedded[0][0]             
     __________________________________________________________________________________________________
-    reshape_1 (Reshape)             (None, 10)           0           user_embedded[0][0]              
+    reshape_11 (Reshape)            (None, 10)           0           user_embedded[0][0]              
     __________________________________________________________________________________________________
-    dot (Dot)                       (None, 1)            0           reshape[0][0]                    
-                                                                     reshape_1[0][0]                  
+    concatenate_3 (Concatenate)     (None, 20)           0           reshape_10[0][0]                 
+                                                                     reshape_11[0][0]                 
+    __________________________________________________________________________________________________
+    dense_6 (Dense)                 (None, 256)          5376        concatenate_3[0][0]              
+    __________________________________________________________________________________________________
+    dense_7 (Dense)                 (None, 1)            257         dense_6[0][0]                    
     ==================================================================================================
-    Total params: 103,340
-    Trainable params: 103,340
+    Total params: 108,973
+    Trainable params: 108,973
     Non-trainable params: 0
     __________________________________________________________________________________________________
 
-
+```
 
 ```python
 #训练和评估
@@ -221,55 +242,9 @@ model.compile(loss='mse',optimizer='adam')
 model.fit([train_df['userId'],train_df['movieId']],
           train_df['rating'],
           batch_size=256,
-         epochs=20,
-      validation_split=0.1)
+         epochs=20)
 predictions = model.predict([test_df['userId'],test_df['movieId']])
 ```
-
-    WARNING:tensorflow:Falling back from v2 loop because of error: Failed to find data adapter that can handle input: (<class 'list'> containing values of types {"<class 'pandas.core.series.Series'>"}), <class 'NoneType'>
-    Train on 72601 samples, validate on 8067 samples
-    Epoch 1/20
-    72601/72601 [==============================] - 2s 23us/sample - loss: 0.9517 - val_loss: 1.4929
-    Epoch 2/20
-    72601/72601 [==============================] - 2s 21us/sample - loss: 0.8698 - val_loss: 1.4361
-    Epoch 3/20
-    72601/72601 [==============================] - 1s 20us/sample - loss: 0.8053 - val_loss: 1.3950
-    Epoch 4/20
-    72601/72601 [==============================] - 2s 21us/sample - loss: 0.7555 - val_loss: 1.3636
-    Epoch 5/20
-    72601/72601 [==============================] - 2s 21us/sample - loss: 0.7162 - val_loss: 1.3399
-    Epoch 6/20
-    72601/72601 [==============================] - 2s 21us/sample - loss: 0.6848 - val_loss: 1.3216
-    Epoch 7/20
-    72601/72601 [==============================] - 2s 21us/sample - loss: 0.6588 - val_loss: 1.3082
-    Epoch 8/20
-    72601/72601 [==============================] - 2s 21us/sample - loss: 0.6379 - val_loss: 1.2975
-    Epoch 9/20
-    72601/72601 [==============================] - 1s 21us/sample - loss: 0.6198 - val_loss: 1.2884
-    Epoch 10/20
-    72601/72601 [==============================] - 2s 21us/sample - loss: 0.6047 - val_loss: 1.2815
-    Epoch 11/20
-    72601/72601 [==============================] - 2s 22us/sample - loss: 0.5917 - val_loss: 1.2772
-    Epoch 12/20
-    72601/72601 [==============================] - 2s 21us/sample - loss: 0.5807 - val_loss: 1.2720
-    Epoch 13/20
-    72601/72601 [==============================] - 2s 22us/sample - loss: 0.5709 - val_loss: 1.2697
-    Epoch 14/20
-    72601/72601 [==============================] - 2s 21us/sample - loss: 0.5626 - val_loss: 1.2670
-    Epoch 15/20
-    72601/72601 [==============================] - 2s 21us/sample - loss: 0.5551 - val_loss: 1.2648
-    Epoch 16/20
-    72601/72601 [==============================] - 2s 21us/sample - loss: 0.5480 - val_loss: 1.2634
-    Epoch 17/20
-    72601/72601 [==============================] - 1s 21us/sample - loss: 0.5417 - val_loss: 1.2633
-    Epoch 18/20
-    72601/72601 [==============================] - 2s 21us/sample - loss: 0.5361 - val_loss: 1.2625
-    Epoch 19/20
-    72601/72601 [==============================] - 2s 21us/sample - loss: 0.5308 - val_loss: 1.2627
-    Epoch 20/20
-    72601/72601 [==============================] - 2s 21us/sample - loss: 0.5258 - val_loss: 1.2614
-    WARNING:tensorflow:Falling back from v2 loop because of error: Failed to find data adapter that can handle input: (<class 'list'> containing values of types {"<class 'pandas.core.series.Series'>"}), <class 'NoneType'>
-
 
 
 ```python
@@ -278,10 +253,9 @@ rmse = np.sqrt(mean_squared_error(y_pred=predictions, y_true=test_df['rating']))
 print('RMSE:',rmse)
 ```
 
-    RMSE: 1.1353689899680335
 
 
-# 3.使用pytroch实现矩阵分解
+# 4.使用pytroch实现矩阵分解
 
 
 ```python
@@ -293,26 +267,35 @@ from torch.utils.data import BatchSampler,RandomSampler
 
 ```python
 class MF(nn.Module):
-    def __init__(self,user_size,movie_size):
+    def __init__(self,user_size,movie_size,embedding_dim,outlayer='dot'):
         super(MF,self).__init__()
-        self.user_embedding = nn.Embedding(user_size,embedding_dim=10)
-        self.movie_embedding = nn.Embedding(movie_size,embedding_dim=10)
+        self.outlayer = outlayer
+        self.user_embedding = nn.Embedding(user_size,embedding_dim=embedding_dim)
+        self.movie_embedding = nn.Embedding(movie_size,embedding_dim=embedding_dim)
+        if outlayer == 'fc':
+            self.fc1 = nn.Linear(in_features=2*embedding_dim,out_features=256)
+            self.fc2 = nn.Linear(in_features=256,out_features=1)
     
     def forward(self,user_id,movie_id):
         #embedding
         user_embedded = self.user_embedding(user_id)
-        movie_embedded = self.user_embedding(user_id)
-        
-        ## 这里需要注意，考虑batch的存在
-        ## 这里的操作是两个矩阵对应位置相乘， 然后根据列求和，即两个矩阵对应的行做dot
-        out =torch.sum(user_embedded*movie_embedded,1)
+        movie_embedded = self.movie_embedding(user_id)
+        if self.outlayer == 'dot':
+            ## 这里需要注意，考虑batch的存在
+            ## 这里的操作是两个矩阵对应位置相乘， 然后根据列求和，即两个矩阵对应的行做dot
+            out =torch.sum(user_embedded*movie_embedded,1)
+        elif self.outlayer == 'fc':
+            concat = torch.cat((user_embedded,movie_embedded),1)
+            x = self.fc1(concat)
+            x = torch.relu(x)
+            out = self.fc2(x)
         return out
 ```
 
 
 ```python
-device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
-mf = MF(n_users,n_movies).to(device)
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+mf = MF(n_users,n_movies,10,'fc').to(device)
 op = torch.optim.Adam(mf.parameters())
 loss_func = nn.MSELoss()
 ```
@@ -320,8 +303,9 @@ loss_func = nn.MSELoss()
 
 ```python
 #训练
-for epoch in range(20):
-    for index in BatchSampler(RandomSampler(train_df),256,drop_last=False):
+
+for epoch in tqdm_notebook(range(20),desc='整体进度'):
+    for index in tqdm_notebook(BatchSampler(RandomSampler(train_df),256,drop_last=True),desc='第{}个epoch0'.format(epoch),leave=False):
         batch = train_df.iloc[index]
         user_id = torch.tensor(batch['userId'].tolist()).to(device)
         movie_id = torch.tensor(batch['movieId'].tolist()).to(device)
@@ -332,7 +316,6 @@ for epoch in range(20):
         op.step()
         
 ```
-
 
 ```python
 #预测
@@ -345,6 +328,7 @@ rmse = np.sqrt(mean_squared_error(y_pred=predictions.detach().cpu().numpy(), y_t
 print('RMSE:',rmse)
 ```
 
-    RMSE: 0.9522425921132694
+
+
 
 
