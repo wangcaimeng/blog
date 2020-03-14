@@ -2,7 +2,7 @@
 title: hexo配置latex数学公式支持
 date: 2019-10-25 22:31:45
 categories: 环境搭建
-tags:
+tags: hexo
 mathjax: true
 ---
 
