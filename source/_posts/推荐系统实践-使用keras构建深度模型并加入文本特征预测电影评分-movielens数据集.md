@@ -627,7 +627,7 @@ from tensorflow.keras.utils import plot_model
 
 
 ```python
-def build_model():
+def build_model(nn_type = 'fc'):
     # Input Layer
     user_id_input = Input(shape=[1],name='user_id_input')
     movied_id_input = Input(shape=[1],name='movie_id_input')
@@ -638,37 +638,49 @@ def build_model():
     user_embedded = Embedding(output_dim=10,input_dim=len(users),input_length=1)(user_id_input)
     movie_embedded = Embedding(output_dim=10,input_dim=len(movies),input_length=1)(movied_id_input)
     
-    genres_embedded = Embedding(output_dim=50,input_dim=len(genres)+1,input_length=len(genres_seqs[0]))(genres_input)
-    title_embedded = Embedding(output_dim=200,input_dim=len(titles)+1,input_length=len(title_seqs[0]))(title_input)
+    mask_zero = True #if nn_type == 'lstm' else False
+    genres_embedded = Embedding(output_dim=50,input_dim=len(genres)+1,input_length=len(genres_seqs[0]),mask_zero=mask_zero)(genres_input)
+    title_embedded = Embedding(output_dim=200,input_dim=len(titles)+1,input_length=len(title_seqs[0]),mask_zero=mask_zero)(title_input)
     
     #Reshape [batch_size,1,embedding_size] to [batch_size,embedding_size] 
     user_embedded = Reshape([10])(user_embedded)
     movie_embedded = Reshape([10])(movie_embedded)
     
+    
+    # title 和genres embedding后是(batch*length*out*dim), 可以直接展开 或者用1D CNN
+    if nn_type == 'fc':
+        #Flatten text embedded
+        genres_embedded = Flatten()(genres_embedded)
+        title_embedded = Flatten()(title_embedded)
+        text_vec = Concatenate()([genres_embedded,title_embedded])
+        text_vec = Dense(1024,activation='relu')(text_vec)
+        text_vec = Dense(512,activation='relu')(text_vec)
+        text_vec = Dense(128)(text_vec)
+    elif nn_type == 'cnn':
+        #CNN    
+        genres_conv = Conv1D(32,5,strides=1)(genres_embedded)
+        genres_conv = MaxPool1D(2)(genres_conv)
+        genres_conv = Conv1D(64,3,strides=1)(genres_conv)
+        genres_conv = Flatten()(genres_conv)
 
-    ## title 和genres embedding后是(batch*length*out*dim), 可以直接展开 或者用1D CNN
-    #Flatten text embedded
-#     genres_embedded = Flatten()(genres_embedded)
-#     title_embedded = Flatten()(title_embedded)
-#     text_vec = Concatenate()([genres_embedded,title_embedded])
+        title_conv = Conv1D(32,5,strides=1)(title_embedded)
+        title_conv = MaxPool1D(2)(title_conv)
+        title_conv = Conv1D(64,3,strides=1)(title_conv)
+        title_conv = Flatten()(title_conv)
+
+        text_vec = Concatenate()([genres_conv,title_conv])
+        text_vec = Dense(1024,activation='relu')(text_vec)
+        text_vec = Dense(512,activation='relu')(text_vec)
+        text_vec = Dense(128)(text_vec)
     
-    #CNN    
-    genres_conv = Conv1D(32,5,strides=1)(genres_embedded)
-    genres_conv = MaxPool1D(2)(genres_conv)
-    genres_conv = Conv1D(64,3,strides=1)(genres_conv)
-    genres_conv = Flatten()(genres_conv)
-    
-    title_conv = Conv1D(32,5,strides=1)(title_embedded)
-    title_conv = MaxPool1D(2)(title_conv)
-    title_conv = Conv1D(64,3,strides=1)(title_conv)
-    title_conv = Flatten()(title_conv)
-    
-    text_vec = Concatenate()([genres_conv,title_conv])
+    elif nn_type == 'lstm':
+        genres_lstm = LSTM(20)(genres_embedded)
+        title_lstm = LSTM(100)(title_embedded)
+        
+        text_vec = Concatenate()([genres_lstm,title_lstm])
     
     
-    text_vec = Dense(1024,activation='relu')(text_vec)
-    text_vec = Dense(512,activation='relu')(text_vec)
-    text_vec = Dense(128)(text_vec)
+   
     
     all_vec = Concatenate()([text_vec,user_embedded,movie_embedded])
     all_vec = Dense(256,activation='relu')(all_vec)
@@ -679,7 +691,7 @@ def build_model():
 
 
 ```python
-model = build_model()
+model = build_model('cnn')
 plot_model(model,show_shapes=True,show_layer_names=False)
 ```
 
