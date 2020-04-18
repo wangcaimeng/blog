@@ -77,7 +77,8 @@ class Tower(tf.keras.layers.Layer):
 ```
 
 ### MMoE Model
-这里再初始化的时候分别初始化gates，experts和towers，再call中实现forward过程会有有些坑，总之请确保batch_first(第0维是batch)
+这里再初始化的时候分别初始化gates，experts和towers.
+**这里实现有些问题， 每个expert的结果原文中是加权后concat，这里是加权sum**
 ``` python
 class MMoE(tf.keras.Model):
 
