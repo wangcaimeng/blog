@@ -6,25 +6,38 @@ categories:
     - 推荐算法
 mathjax: true
 ---
+
 之前分享了来自Google的经典多任务模型MMoE，本篇对来自阿里的两篇多任务模型进行概述。
+
 <!-- more  -->
 
 ## 1. DUPN
+
 Deep User Perception Network (DUPN) 是一个用于用户特征表示的网络，将用户的行为序列表示为用户特征，服务于下游的多任务（文章中是淘宝搜索场景下进行5个任务）
 
 ### 1.1 DUPN部分
-![png](推荐算法-Multi-Task之GUPN和ESMM/DUPN.png)
+
+![png](推荐算法-Multi-Task之DUPN和ESMM/DUPN.png)
+
 模型现将用户行为序列进行embedding，每个时刻的embedding包括两部分，p：the behavior properties ， e：the user representation. 这两部分在后续是分开用的。 然后是lstm和attention，lstm多输入的embedding做了分开的处理。
+
 - 行为序列embedding
-  ![png](推荐算法-Multi-Task之GUPN和ESMM/DUPNEmbedding.png)
+  
+![png](推荐算法-Multi-Task之DUPN和ESMM/DUPNEmbedding.png)
+
   每个行为序列可以表示成e $\{x_1 ,x_2 , . . . ,x _N\}$, 其中$x_i = <item_i,property_i>$,$item_i$就是图中紫色的部分，包括商品id和一些其他信息，$property_i$就是图中粉色的部分，包括场景时间行为类型等信息。 和整体结构图中的两部分embedding颜色上也是对应的。
 - Property Gated LSTM & Attention Net
-    ![png](推荐算法-Multi-Task之GUPN和ESMM/DUPNLSTM.png)
-    LSTM这里需要注意的就是p(t)和e(t)这两部分embedding是分开的
 
-    Attention这里 query就是搜索的query的user是上边的e(t)concat起来，然后算出每个h的权重， 可以结合整体架构去看。 黑色线是用户embedding的数据流，粉线是行为property embedding的数据流
+![png](推荐算法-Multi-Task之DUPN和ESMM/DUPNLSTM.png)
+
+  LSTM这里需要注意的就是p(t)和e(t)这两部分embedding是分开的
+
+  Attention这里 query就是搜索的query的user是上边的e(t)concat起来，然后算出每个h的权重， 可以结合整体架构去看。 黑色线是用户embedding的数据流，粉线是行为property embedding的数据流
+
 ### 1.2 下游任务部分
-![png](推荐算法-Multi-Task之GUPN和ESMM/DUPNTasks.png)
+
+![png](推荐算法-Multi-Task之DUPN和ESMM/DUPNTasks.png)
+
 - CTR
 - L2R ：point-wise L2R
 - Price Preference Prediction(PPP) 预测用户的购买价格区间
@@ -33,18 +46,19 @@ Deep User Perception Network (DUPN) 是一个用于用户特征表示的网络�
   
 
 ## 2. ESMM
+
 ESMM是为了解决pCVR预估训练样本选择bias的问题。 训练样本选择的是曝光且点击的样本，然而预测的时候样本是来自曝光空间的。
 
-![png](推荐算法-Multi-Task之GUPN和ESMM/ESMM1.png)
+![png](推荐算法-Multi-Task之DUPN和ESMM/ESMM1.png)
 
 pCTR,pCVR,pCTCVR满足下面的关系，x是样本，y是点击事件，z是转化事件。
 
-![png](推荐算法-Multi-Task之GUPN和ESMM/ESMM3.png)
+![png](推荐算法-Multi-Task之DUPN和ESMM/ESMM3.png)
 
 于此便有了模型的架构，模型分别使用2个辅助任务，预测pCTR和pCTCVR，任务共享Embedding层。
 pCTCVR由 两部分相乘得到，并且计算loss的时候计算pCTCVR和pCTR的loss
 
-![png](推荐算法-Multi-Task之GUPN和ESMM/ESMM2.png)
+![png](推荐算法-Multi-Task之DUPN和ESMM/ESMM2.png)
 
 ### 参考文献
 
